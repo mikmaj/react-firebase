@@ -1,19 +1,35 @@
-import React, { Component } from 'react';
+import React from 'react';
+import { BrowserRouter as Router, Route } from 'react-router-dom'
+
 import Navigation from '../Navigation'
+import LandingPage from '../LandingPage'
+import SignUpPage from '../SignUp'
+import SignInPage from '../SignIn'
+import PasswordForgetPage from '../PasswordForget'
+import HomePage from '../HomePage'
+import AccountPage from '../AccountPage'
+import AdminPage from '../AdminPage'
 
-const LINKS = [
-    { label: 'Website', to: 'https://www.robinwieruch.de/' },
-    { label: 'Twitter', to: 'https://twitter.com/rwieruch' }
-]
+import * as ROUTES from '../../constants/routes'
 
-class App extends Component {
-    render() {
-        return (
+const App = () => {
+    return (
+        <Router>
             <div>
-                <Navigation links={LINKS} />
+                <Navigation />
+
+                <hr />
+
+                <Route exact path={ROUTES.LANDING} component={LandingPage} />
+                <Route path={ROUTES.SIGN_UP} component={SignUpPage} />
+                <Route path={ROUTES.SIGN_IN} component={SignInPage} />
+                <Route path={ROUTES.PASSWORD_FORGET} component={PasswordForgetPage} />
+                <Route path={ROUTES.HOME} component={HomePage} />
+                <Route path={ROUTES.ACCOUNT} component={AccountPage} />
+                <Route path={ROUTES.ADMIN} component={AdminPage} />
             </div>
-        );
-    }
-}
+        </Router>
+    );
+};
 
 export default App;
