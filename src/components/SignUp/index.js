@@ -112,7 +112,7 @@ const SignUpLink = () => (
     </p>
 )
 
-// Use recompose to organize higher-order-components and use them to pass instances to the sign up form
+// Use recompose to organize higher-order components and use them to pass instances to the sign up form
 const SignUpForm = compose(
     withRouter,
     withFirebase
