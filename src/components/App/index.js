@@ -11,36 +11,14 @@ import AccountPage from '../AccountPage'
 import AdminPage from '../AdminPage'
 
 import * as ROUTES from '../../constants/routes'
-import { withFirebase } from '../Firebase'
+import { withAuthentication } from '../Session'
 
 class App extends Component {
-    constructor(props) {
-        super(props)
-
-        // Store the authenticated user in global state so it can be passed to other components
-        this.state = {
-            authUser: null
-        }
-    }
-
-    componentDidMount() {
-        this.listener = this.props.firebase.auth.onAuthStateChanged(
-            authUser => {
-                authUser
-                    ? this.setState({ authUser })
-                    : this.setState({ authUser: null })
-            })
-    }
-
-    componentWillUnmount() {
-        this.listener()
-    }
-
     render() {
         return (
             <Router>
                 <div>
-                    <Navigation authUser={this.state.authUser} />
+                    <Navigation />
 
                     <hr />
 
@@ -57,4 +35,4 @@ class App extends Component {
     }
 };
 
-export default withFirebase(App);
+export default withAuthentication(App);
