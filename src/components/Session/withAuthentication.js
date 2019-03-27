@@ -25,9 +25,11 @@ const withAuthentication = Component => {
                 })
         }
 
+        // Clean up the listener to avoid memory leaks
         componentWillUnmount() {
             this.listener()
         }
+
         render() {
             return (
                 <AuthUserContext.Provider value={this.state.authUser}>
