@@ -1,5 +1,6 @@
 import app from 'firebase/app'
 import 'firebase/auth'
+import 'firebase/database'
 
 // Get confidential information from environment variables
 const config = {
@@ -16,9 +17,10 @@ class Firebase {
         app.initializeApp(config)
 
         this.auth = app.auth()
+        this.db = app.database()
     }
 
-    // Asynchronous Auth API
+    // Auth API
     doCreateUserWithEmailAndPassword = (email, password) =>
         this.auth.createUserWithEmailAndPassword(email, password)
 
@@ -30,6 +32,12 @@ class Firebase {
     doPasswordReset = email => this.auth.sendPasswordResetEmail(email)
 
     doPasswordUpdate = password => this.auth.currentUser.updatePassword(password)
+
+    // User API
+    // Get a single user from the Firebase real-time db
+    user = uid => this.db.ref(`users/${uid}`)
+    // Get all users
+    users = () => this.db.ref('users')
 }
 
 export default Firebase
