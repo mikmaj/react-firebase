@@ -2,20 +2,21 @@ import React from 'react'
 
 import { PasswordForgetForm } from '../PasswordForget'
 import PasswordChangeForm from '../PasswordChange'
-import { AuthUserContext } from '../Session'
+import { AuthUserContext, withAuthorization } from '../Session'
 
 const AccountPage = () => (
-    <div>
-        <h1>Account Page</h1>
-        <AuthUserContext.Consumer>
-            {authUser =>
-                authUser ? <div><PasswordForgetForm /><PasswordChangeForm /></div>
-                    : <h4>Please Sign In To View This Page</h4>
-            }
-        </AuthUserContext.Consumer>
-
-    </div>
+    <AuthUserContext.Consumer>
+        {authUser => (
+            <div>
+                <h1>Account: {authUser.email}</h1>
+                <PasswordForgetForm />
+                <PasswordChangeForm />
+            </div>
+        )}
+    </AuthUserContext.Consumer>
 );
 
+// Only show the page for authorized users
+const condition = authUser => !!authUser
 
-export default AccountPage;
+export default withAuthorization(condition)(AccountPage);
