@@ -33,7 +33,14 @@ class SignUpFormBase extends Component {
         // Call the sign up function defined in the firebase class
         this.props.firebase
             .doCreateUserWithEmailAndPassword(email, password)
+            // Create a new user in the db
             .then(authUser => {
+                return this.props.firebase.user(authUser.user.uid).set({
+                    username,
+                    email
+                })
+            })
+            .then(() => {
                 // If the request resolves successfully, reset the state to empty the input fields
                 this.setState({ ...INITIAL_STATE })
                 // Redirect to the home page after a successful sign up
