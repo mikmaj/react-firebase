@@ -20,7 +20,7 @@ class Firebase {
         this.db = app.database()
     }
 
-    // Auth API
+    // ### Auth API ###
     doCreateUserWithEmailAndPassword = (email, password) =>
         this.auth.createUserWithEmailAndPassword(email, password)
 
@@ -33,7 +33,35 @@ class Firebase {
 
     doPasswordUpdate = password => this.auth.currentUser.updatePassword(password)
 
-    // User API
+    // ### Merge Auth and DB User API ###
+    onAuthUserListener = (next, fallback) =>
+        this.auth.onAuthStateChanged(authUser => {
+            if (authUser) {
+                this.user(authUser.uid)
+                    .once('value')
+                    .then(snapshot => {
+                        const dbUser = snapshot.val()
+
+                        // Default empty roles
+                        if (!dbUser.roles) {
+                            dbUser.roles = []
+                        }
+
+                        // Merge auth and db user
+                        authUser = {
+                            uid: authUser.uid,
+                            email: authUser.email,
+                            ...dbUser,
+                        }
+
+                        next(authUser)
+                    })
+            } else {
+                fallback()
+            }
+        })
+
+    // ### User API ###
     // Get a single user from the Firebase real-time db
     user = uid => this.db.ref(`users/${uid}`)
     // Get all users

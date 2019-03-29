@@ -12,37 +12,13 @@ const withAuthorization = condition => Component => {
     class WithAuthorization extends React.Component {
         // Use a Firebase listener to trigger a callback when the authenticated user changes
         componentDidMount() {
-            this.listener = this.props.firebase.auth.onAuthStateChanged(
+            this.listener = this.props.firebase.auth.onAuthUserListener(
                 authUser => {
-                    if (authUser) {
-                        // If an authenticated user is found, get the user from the db with uid
-                        this.props.firebase
-                            .user(authUser.uid)
-                            .once('value')
-                            .then(snapshot => {
-                                const dbUser = snapshot.val()
-
-                                // Default empty roles
-                                if (!dbUser.roles) {
-                                    dbUser.roles = []
-                                }
-
-                                // Merge auth and db user
-                                authUser = {
-                                    uid: authUser.uid,
-                                    email: authUser.email,
-                                    ...dbUser,
-                                }
-
-                                // If authorization fails, redirect to the sign in page. Otherwise render the passed component
-                                if (!condition(authUser)) {
-                                    this.props.history.push(ROUTES.SIGN_IN)
-                                }
-                            })
-                    } else {
+                    if (!condition(authUser)) {
                         this.props.history.push(ROUTES.SIGN_IN)
                     }
-                }
+                },
+                () => this.props.history.push(ROUTES.SIGN_IN)
             )
         }
 
