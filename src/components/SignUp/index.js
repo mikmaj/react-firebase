@@ -4,6 +4,7 @@ import { compose } from 'recompose'
 
 import { withFirebase } from '../Firebase'
 import * as ROUTES from '../../constants/routes'
+import * as ROLES from '../../constants/roles'
 
 const SignUpPage = () => (
     <div>
@@ -17,6 +18,7 @@ const INITIAL_STATE = {
     email: '',
     password: '',
     passwordConfirm: '',
+    isAdmin: false,
     error: null
 }
 
@@ -28,7 +30,13 @@ class SignUpFormBase extends Component {
     }
 
     onSubmit = e => {
-        const { username, email, password } = this.state
+        const { username, email, password, isAdmin } = this.state
+
+        const roles = []
+
+        if (isAdmin) {
+            roles.push(ROLES.ADMIN)
+        }
 
         // Call the sign up function defined in the firebase class
         this.props.firebase
@@ -37,7 +45,8 @@ class SignUpFormBase extends Component {
             .then(authUser => {
                 return this.props.firebase.user(authUser.user.uid).set({
                     username,
-                    email
+                    email,
+                    roles,
                 })
             })
             .then(() => {
@@ -59,6 +68,10 @@ class SignUpFormBase extends Component {
         this.setState({ [e.target.name]: e.target.value })
     }
 
+    onChangeCheckbox = event => {
+        this.setState({ [event.target.name]: event.target.checked })
+    }
+
     render() {
         // Destructure the state object
         const {
@@ -66,6 +79,7 @@ class SignUpFormBase extends Component {
             email,
             password,
             passwordConfirm,
+            isAdmin,
             error
         } = this.state
 
@@ -102,6 +116,15 @@ class SignUpFormBase extends Component {
                     onChange={this.onChange}
                     type="password"
                     placeholder="Confirm Password" />
+                <label>
+                    Admin:
+                    <input
+                        name="isAdmin"
+                        type="checkbox"
+                        checked={isAdmin}
+                        onChange={this.onChangeCheckbox}
+                    />
+                </label>
                 <button disabled={isInvalid} type="submit">
                     Sign Up
                 </button>

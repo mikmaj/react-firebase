@@ -14,8 +14,32 @@ const withAuthorization = condition => Component => {
         componentDidMount() {
             this.listener = this.props.firebase.auth.onAuthStateChanged(
                 authUser => {
-                    // If authorization fails, redirect to the sign in page. Otherwise render the passed component
-                    if (!condition(authUser)) {
+                    if (authUser) {
+                        // If an authenticated user is found, get the user from the db with uid
+                        this.props.firebase
+                            .user(authUser.uid)
+                            .once('value')
+                            .then(snapshot => {
+                                const dbUser = snapshot.val()
+
+                                // Default empty roles
+                                if (!dbUser.roles) {
+                                    dbUser.roles = []
+                                }
+
+                                // Merge auth and db user
+                                authUser = {
+                                    uid: authUser.uid,
+                                    email: authUser.email,
+                                    ...dbUser,
+                                }
+
+                                // If authorization fails, redirect to the sign in page. Otherwise render the passed component
+                                if (!condition(authUser)) {
+                                    this.props.history.push(ROUTES.SIGN_IN)
+                                }
+                            })
+                    } else {
                         this.props.history.push(ROUTES.SIGN_IN)
                     }
                 }
