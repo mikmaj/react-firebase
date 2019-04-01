@@ -3,21 +3,24 @@ import { Link } from 'react-router-dom'
 
 import SignOutButton from '../SignOut'
 import * as ROUTES from '../../constants/routes'
+import * as ROLES from '../../constants/roles'
 import { AuthUserContext } from '../Session'
 import './Navigation.scss'
 
 const Navigation = () => (
-    <div>
-        <AuthUserContext.Consumer>
-            {authUser =>
-                authUser ? <NavigationAuth /> : <NavigationNonAuth />
-            }
-        </AuthUserContext.Consumer>
-    </div>
+    <AuthUserContext.Consumer>
+        {authUser =>
+            authUser ? (
+                <NavigationAuth authUser={authUser} />
+            ) : (
+                    <NavigationNonAuth />
+                )
+        }
+    </AuthUserContext.Consumer>
 )
 
 // Links to show if a user is authenticated
-const NavigationAuth = () => (
+const NavigationAuth = ({ authUser }) => (
     <ul>
         {/* Get navigation routes from constants/routes.js */}
         <li>
@@ -29,9 +32,11 @@ const NavigationAuth = () => (
         <li>
             <Link to={ROUTES.ACCOUNT}>Account</Link>
         </li>
-        <li>
-            <Link to={ROUTES.ADMIN}>Admin</Link>
-        </li>
+        {authUser.roles.includes(ROLES.ADMIN) && (
+            <li>
+                <Link to={ROUTES.ADMIN}>Admin</Link>
+            </li>
+        )}
         <li>
             <SignOutButton />
         </li>
