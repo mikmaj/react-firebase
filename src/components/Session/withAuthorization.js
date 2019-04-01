@@ -12,7 +12,7 @@ const withAuthorization = condition => Component => {
     class WithAuthorization extends React.Component {
         // Use a Firebase listener to trigger a callback when the authenticated user changes
         componentDidMount() {
-            this.listener = this.props.firebase.auth.onAuthUserListener(
+            this.listener = this.props.firebase.onAuthUserListener(
                 authUser => {
                     if (!condition(authUser)) {
                         this.props.history.push(ROUTES.SIGN_IN)

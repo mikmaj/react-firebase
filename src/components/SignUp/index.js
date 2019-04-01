@@ -1,6 +1,5 @@
 import React, { Component } from 'react';
 import { Link, withRouter } from 'react-router-dom'
-import { compose } from 'recompose'
 
 import { withFirebase } from '../Firebase'
 import * as ROUTES from '../../constants/routes'
@@ -43,17 +42,23 @@ class SignUpFormBase extends Component {
             .doCreateUserWithEmailAndPassword(email, password)
             // Create a new user in the db
             .then(authUser => {
-                return this.props.firebase.user(authUser.user.uid).set({
-                    username,
-                    email,
-                    roles,
-                })
-            })
-            .then(() => {
-                // If the request resolves successfully, reset the state to empty the input fields
-                this.setState({ ...INITIAL_STATE })
-                // Redirect to the home page after a successful sign up
-                this.props.history.push(ROUTES.HOME)
+                this.props.firebase
+                    .user(authUser.user.uid)
+                    .set({
+                        username,
+                        email,
+                        roles,
+                    })
+                    .then(() => {
+                        // If the request resolves successfully, reset the state to empty the input fields
+                        this.setState({ ...INITIAL_STATE })
+                        // Redirect to the home page after a successful sign up
+                        this.props.history.push(ROUTES.HOME)
+                    })
+                    .catch(error => {
+                        // If the request doesn't resolve correctly, catch the error to show the error message on the page
+                        this.setState({ error })
+                    })
             })
             .catch(error => {
                 // If the request doesn't resolve correctly, catch the error to show the error message on the page
@@ -64,8 +69,8 @@ class SignUpFormBase extends Component {
         e.preventDefault()
     }
 
-    onChange = e => {
-        this.setState({ [e.target.name]: e.target.value })
+    onChange = event => {
+        this.setState({ [event.target.name]: event.target.value })
     }
 
     onChangeCheckbox = event => {
@@ -143,10 +148,7 @@ const SignUpLink = () => (
 )
 
 // Use recompose to organize higher-order components and use them to pass instances to the sign up form
-const SignUpForm = compose(
-    withRouter,
-    withFirebase
-)(SignUpFormBase)
+const SignUpForm = withRouter(withFirebase(SignUpFormBase))
 
 export default SignUpPage;
 
