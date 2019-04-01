@@ -12,16 +12,19 @@ const withAuthentication = Component => {
 
             // Store the authenticated user in global state so it can be passed to other components
             this.state = {
-                authUser: null
+                authUser: JSON.parse(localStorage.getItem('authUser'))
             }
         }
 
         componentDidMount() {
             this.listener = this.props.firebase.onAuthUserListener(
                 authUser => {
+                    // Store the user to the local storage too so don't need to wait for Firebase to check it
+                    localStorage.setItem('authuser', JSON.stringify(authUser))
                     this.setState({ authUser })
                 },
                 () => {
+                    localStorage.removeItem('authuser')
                     this.setState({ authUser: null })
                 })
         }
