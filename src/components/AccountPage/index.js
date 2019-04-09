@@ -40,12 +40,45 @@ class LoginManagementBase extends Component {
     }
 
     componentDidMount() {
+        this.fetchSignInMethods()
+    }
+
+    // Fetch all active sign in methods for the users email address from the Firebase API
+    fetchSignInMethods = () => {
         this.props.firebase.auth
-            // Fetch all active sign in methods for the users email address
             .fetchSignInMethodsForEmail(this.props.authUser.email)
             .then(activeSignInMethods =>
                 this.setState({ activeSignInMethods, error: null }),
             )
+            .catch(error => this.setState({ error }))
+    }
+
+    // Link accounts
+    onSocialLoginLink = provider => {
+        this.props.firebase.auth.currentUser
+            .linkWithPopup(this.props.firebase[provider])
+            .then(this.fetchSignInMethods)
+            .catch(error => this.setState({ error }))
+    }
+
+    // Unlink accounts
+    onUnlink = providerId => {
+        this.props.firebase.auth.currentUser
+            .unlink(providerId)
+            .then(this.fetchSignInMethods)
+            .catch(error => this.setState({ error }))
+    }
+
+    // Create a credential from the users email and pw and link it to the other accounts
+    onDefaultLoginLink = password => {
+        const credential = this.props.firebase.emailAuthProvider.credential(
+            this.props.authUser.email,
+            password,
+        )
+
+        this.props.firebase.auth.currentUser
+            .linkAndRetrieveDataWithCredential(credential)
+            .then(this.fetchSignInMethods)
             .catch(error => this.setState({ error }))
     }
 
@@ -57,20 +90,29 @@ class LoginManagementBase extends Component {
                 Sign In Methods:
                 <ul>
                     {SIGN_IN_METHODS.map(signInMethod => {
+                        const onlyOneLeft = activeSignInMethods.length === 1
                         const isEnabled = activeSignInMethods.includes(
                             signInMethod.id,
                         )
-
+                        // Conditional rendering for the password sign-in method
                         return (
                             <li key={signInMethod.id}>
-                                {isEnabled ? (
-                                    <button type="button" onClick={() => { }}>
-                                        Deactivate {signInMethod.id}
-                                    </button>
+                                {signInMethod.id === 'password' ? (
+                                    <DefaultLoginToggle
+                                        onlyOneLeft={onlyOneLeft}
+                                        isEnabled={isEnabled}
+                                        signInMethod={signInMethod}
+                                        onLink={this.onDefaultLoginLink}
+                                        onUnlink={this.onUnlink}
+                                    />
                                 ) : (
-                                        <button type="button" onClick={() => { }}>
-                                            Link {signInMethod.id}
-                                        </button>
+                                        <SocialLoginToggle
+                                            onlyOneLeft={onlyOneLeft}
+                                            isEnabled={isEnabled}
+                                            signInMethod={signInMethod}
+                                            onLink={this.onSocialLoginLink}
+                                            onUnlink={this.onUnlink}
+                                        />
                                     )}
                             </li>
                         )
@@ -79,6 +121,97 @@ class LoginManagementBase extends Component {
                 {error && error.message}
             </div>
         )
+    }
+}
+
+const SocialLoginToggle = ({
+    onlyOneLeft,
+    isEnabled,
+    signInMethod,
+    onLink,
+    onUnlink,
+}) =>
+    isEnabled ? (
+        <button
+            type="button"
+            onClick={() => onUnlink(signInMethod.id)}
+            // If only one sign-in method is left as active, disable all deactivation buttons
+            disabled={onlyOneLeft}
+        >
+            Deactivate {signInMethod.id}
+        </button>
+    ) : (
+            <button
+                type="button"
+                onClick={() =>
+                    onLink(signInMethod.provider)
+                }
+            >
+                Link {signInMethod.id}
+            </button>
+        )
+
+class DefaultLoginToggle extends Component {
+    constructor(props) {
+        super(props)
+
+        this.state = { passwordOne: '', passwordTwo: '' }
+    }
+
+    onSubmit = event => {
+        event.preventDefault()
+
+        this.props.onLink(this.state.passwordOne)
+        this.setState({ passwordOne: '', passwordTwo: '' })
+    }
+
+    onChange = event => {
+        this.setState({ [event.target.name]: event.target.value })
+    }
+
+    render() {
+        const {
+            onlyOneLeft,
+            isEnabled,
+            signInMethod,
+            onUnlink,
+        } = this.props
+
+        const { passwordOne, passwordTwo } = this.state
+
+        const isInvalid =
+            passwordOne !== passwordTwo || passwordOne === ''
+
+        return isEnabled ? (
+            <button
+                type="button"
+                onClick={() => onUnlink(signInMethod.id)}
+                disabled={onlyOneLeft}
+            >
+                Deactivate {signInMethod.id}
+            </button>
+        ) : (
+                <form onSubmit={this.onSubmit}>
+                    <input
+                        name="passwordOne"
+                        value={passwordOne}
+                        onChange={this.onChange}
+                        type="password"
+                        placeholder="New Password"
+                    />
+                    <input
+                        name="passwordTwo"
+                        value={passwordTwo}
+                        onChange={this.onChange}
+                        type="password"
+                        placeholder="Confirm New Password"
+                    />
+
+                    <button disabled={isInvalid} type="submit">
+                        Link {signInMethod.id}
+                    </button>
+                </form>
+            )
     }
 }
 
